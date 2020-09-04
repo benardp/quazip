@@ -1,20 +1,20 @@
 /*
 Copyright (C) 2005-2014 Sergey A. Tachenov
 
-This file is part of QuaZIP test suite.
+This file is part of QuaZip test suite.
 
-QuaZIP is free software: you can redistribute it and/or modify
+QuaZip is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
 the Free Software Foundation, either version 2.1 of the License, or
 (at your option) any later version.
 
-QuaZIP is distributed in the hope that it will be useful,
+QuaZip is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with QuaZIP.  If not, see <http://www.gnu.org/licenses/>.
+along with QuaZip.  If not, see <http://www.gnu.org/licenses/>.
 
 See COPYING file for the full LGPL text.
 
@@ -30,9 +30,9 @@ see quazip/(un)zip.h files for details. Basically it's the zlib license.
 #include <QFileInfo>
 #include <QTextCodec>
 
-#include <QtTest/QtTest>
+#include <QtTest>
 
-#include <quazip/JlCompress.h>
+#include <JlCompress.h>
 
 #ifdef Q_OS_WIN
 #include <windows.h>
@@ -335,7 +335,7 @@ void TestJlCompress::extractDir()
     QFETCH(QStringList, fileNames);
     QFETCH(QStringList, expectedExtracted);
     QFETCH(QByteArray, fileNameCodecName);
-    QTextCodec *fileNameCodec = nullptr;
+    QTextCodec *fileNameCodec = NULL;
     if (!fileNameCodecName.isEmpty())
         fileNameCodec = QTextCodec::codecForName(fileNameCodecName);
     QDir curDir;
@@ -349,7 +349,7 @@ void TestJlCompress::extractDir()
         QFAIL("Couldn't create test archive");
     }
     QStringList extracted;
-    if (fileNameCodec == nullptr)
+    if (fileNameCodec == NULL)
         extracted = JlCompress::extractDir(zipName, "jlext/jldir");
     else // test both overloads here
         extracted = JlCompress::extractDir(zipName, fileNameCodec, "jlext/jldir");
@@ -372,7 +372,7 @@ void TestJlCompress::extractDir()
     // now test the QIODevice* overload
     QFile zipFile(zipName);
     QVERIFY(zipFile.open(QIODevice::ReadOnly));
-    if (fileNameCodec == nullptr)
+    if (fileNameCodec == NULL)
         extracted = JlCompress::extractDir(&zipFile, "jlext/jldir");
     else // test both overloads here
         extracted = JlCompress::extractDir(&zipFile, fileNameCodec, "jlext/jldir");

@@ -7,12 +7,17 @@
 #include <QFileInfo>
 #include <QPair>
 
-#include <QtTest/QtTest>
+#include <QtTest>
 
-#include "quazip/quazip.h"
-#include "quazip/quazipfile.h"
-#include "quazip/quazipfileinfo.h"
-#include "quazip/quazipnewinfo.h"
+#include <quazip.h>
+#include <quazipfile.h>
+#include <quazipfileinfo.h>
+#include <quazipnewinfo.h>
+
+#if QT_VERSION < 0x050000
+Q_DECLARE_METATYPE(QList<qint32>);
+Q_DECLARE_METATYPE(QuaExtraFieldHash);
+#endif
 
 TestQuaZipFileInfo::TestQuaZipFileInfo(QObject *parent) :
     QObject(parent)
@@ -21,7 +26,10 @@ TestQuaZipFileInfo::TestQuaZipFileInfo(QObject *parent) :
 
 void TestQuaZipFileInfo::getNTFSTime()
 {
-    QString zipName = "newtimes.zip";
+    QFETCH(QString, zipName);
+    QFETCH(bool, useMTime);
+    QFETCH(bool, useATime);
+    QFETCH(bool, useCTime);
     QStringList testFiles;
     testFiles << "test.txt";
     QDir curDir;
@@ -73,11 +81,11 @@ void TestQuaZipFileInfo::getNTFSTime()
         for (int i = 12; i < 36; i += 8) {
             quint64 ticks;
             if (i == 12) {
-                ticks = mTicks;
+                ticks = useMTime ? mTicks : 0;
             } else if (i == 20) {
-                ticks = aTicks;
+                ticks = useATime ? aTicks : 0;
             } else if (i == 28) {
-                ticks = cTicks;
+                ticks = useCTime ? cTicks : 0;
             } else {
                 QFAIL("Stupid programming bug here");
             }
@@ -104,16 +112,27 @@ void TestQuaZipFileInfo::getNTFSTime()
         QuaZipFileInfo64 zipFileInfo;
         QVERIFY(zip.getCurrentFileInfo(&zipFileInfo));
         zip.close();
-        QCOMPARE(zipFileInfo.getNTFSmTime(), fileInfo.lastModified());
-        QCOMPARE(zipFileInfo.getNTFSaTime(), fileInfo.lastRead());
+        QCOMPARE(zipFileInfo.getNTFSmTime(), useMTime ? fileInfo.lastModified() : QDateTime());
+        QCOMPARE(zipFileInfo.getNTFSaTime(), useATime ? fileInfo.lastRead() : QDateTime());
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
-        QCOMPARE(zipFileInfo.getNTFScTime(), fileInfo.birthTime());
+        QCOMPARE(zipFileInfo.getNTFScTime(), useCTime ? fileInfo.birthTime() : QDateTime());
 #else
-        QCOMPARE(zipFileInfo.getNTFScTime(), fileInfo.created());
+        QCOMPARE(zipFileInfo.getNTFScTime(), useCTime ? fileInfo.created() : QDateTime());
 #endif
     }
     removeTestFiles(testFiles);
     curDir.remove(zipName);
+}
+
+void TestQuaZipFileInfo::getNTFSTime_data()
+{
+    QTest::addColumn<QString>("zipName");
+    QTest::addColumn<bool>("useMTime");
+    QTest::addColumn<bool>("useATime");
+    QTest::addColumn<bool>("useCTime");
+    QTest::newRow("no times") << QString::fromUtf8("noTimes") << false << false << false;
+    QTest::newRow("all times") << QString::fromUtf8("allTimes") << true << true << true;
+    QTest::newRow("no CTime") << QString::fromUtf8("noCTime") << true << true << false;
 }
 
 void TestQuaZipFileInfo::getExtTime_data()
